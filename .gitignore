@@ -8,3 +8,7 @@ node_modules/
 # Sistem
 .DS_Store
 Thumbs.db
+
+# Hasil build untuk Vercel
+dist/
+.vercel/

@@ -13,6 +13,12 @@ Catatan: file ini butuh internet (buat memuat library Claude dari CDN dan buat p
 
 Kalau kamu mengubah file di `public/`, `lib/`, atau `standalone/`, buat ulang .html-nya dengan `node build-html.mjs`.
 
+## Website (Vercel)
+
+Repo ini siap di-deploy ke Vercel sebagai situs statis (`vercel.json`): Vercel menjalankan `node build-html.mjs` lalu menyajikan `dist/index.html`.
+Tiap pengunjung memakai API key Anthropic miliknya sendiri (disimpan di browser mereka), atau mode demo.
+Setelah repo GitHub tersambung ke Vercel, setiap `git push` ke `main` otomatis memperbarui website.
+
 ## Cara lain: pakai server lokal
 
 1. Ambil API key di https://platform.claude.com (menu API Keys).

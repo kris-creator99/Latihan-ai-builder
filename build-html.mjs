@@ -3,7 +3,7 @@
 // Jalankan ulang setelah mengubah file di public/, lib/, atau standalone/:
 //   node build-html.mjs
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), "utf8");
 
@@ -29,3 +29,8 @@ swap('<script src="app.js"></script>',
 
 writeFileSync(new URL("./cari-beasiswa.html", import.meta.url), html);
 console.log("cari-beasiswa.html dibuat (" + Math.round(html.length / 1024) + " KB)");
+
+// Salinan untuk website (Vercel menyajikan folder dist/ sebagai situs statis).
+mkdirSync(new URL("./dist/", import.meta.url), { recursive: true });
+writeFileSync(new URL("./dist/index.html", import.meta.url), html);
+console.log("dist/index.html dibuat (untuk deploy ke Vercel)");
