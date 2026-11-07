@@ -1,0 +1,10 @@
+node_modules/
+
+# API key lokal (dibuat oleh "Buka Cari Beasiswa.bat") — jangan pernah di-commit
+.apikey
+.env
+.env.*
+
+# Sistem
+.DS_Store
+Thumbs.db

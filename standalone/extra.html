@@ -1,0 +1,15 @@
+<dialog class="key-dialog" id="keyDialog">
+  <form method="dialog">
+    <h3>API key Anthropic</h3>
+    <p>Versi .html ini memanggil Claude langsung dari browser kamu. Masukkan API key dari
+      <a href="https://platform.claude.com" target="_blank" rel="noopener noreferrer">platform.claude.com</a>.
+      Key hanya disimpan di browser ini, tidak dikirim ke mana pun selain ke API Anthropic.</p>
+    <input id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    <div class="key-actions">
+      <button id="keyDemo" class="ghost" type="button">Coba mode demo</button>
+      <span></span>
+      <button id="keyCancel" class="ghost" type="button">Batal</button>
+      <button id="keySave" class="primary" type="submit">Simpan</button>
+    </div>
+  </form>
+</dialog>

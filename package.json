@@ -1,0 +1,13 @@
+{
+  "name": "cari-beasiswa",
+  "version": "1.0.0",
+  "description": "Search engine beasiswa S1-S3 bergaya Perplexity, didukung Claude + web search",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0"
+  }
+}

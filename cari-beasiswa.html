@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cari Beasiswa</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2320b8a6'/><path d='M16 7 4 13l12 6 10-5v7h2v-8z' fill='white'/><path d='M9 17v5c0 2 3.5 3.5 7 3.5s7-1.5 7-3.5v-5l-7 3.5z' fill='white'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #fcfcf9;
+  --panel: #f3f3ee;
+  --card: #ffffff;
+  --border: #e5e5df;
+  --text: #13343b;
+  --muted: #64748b;
+  --accent: #20b8a6;
+  --accent-strong: #1a9688;
+  --accent-soft: #e3f6f3;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #191a1a;
+    --panel: #202222;
+    --card: #232525;
+    --border: #333838;
+    --text: #e8e8e6;
+    --muted: #9aa3a3;
+    --accent: #20b8a6;
+    --accent-strong: #3fd0be;
+    --accent-soft: #18332f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  font-size: 15px;
+  line-height: 1.6;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+
+/* Sidebar */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+  display: flex; flex-direction: column; gap: 14px;
+  height: 100vh; position: sticky; top: 0; align-self: flex-start;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; color: var(--text); text-decoration: none; padding: 4px 6px; }
+.new-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--border); background: var(--card);
+  border-radius: 999px; padding: 9px 14px; cursor: pointer; font-weight: 500;
+}
+.new-btn:hover { border-color: var(--accent); color: var(--accent-strong); }
+.history-label { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 4px 6px 0; }
+.history { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.history button {
+  width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+  padding: 7px 8px; border-radius: 8px; font-size: 13.5px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.history button:hover, .history button.active { background: var(--card); color: var(--text); }
+
+/* Main */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; padding: 0 16px; }
+
+.home { width: 100%; max-width: 720px; margin: auto 0; padding: 40px 0 15vh; }
+.home h1 { font-weight: 500; font-size: clamp(26px, 4vw, 38px); text-align: center; margin: 0 0 28px; letter-spacing: -.01em; }
+
+.searchbox {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+  padding: 14px 14px 10px; box-shadow: var(--shadow);
+}
+.searchbox:focus-within { border-color: var(--accent); }
+.searchbox textarea { width: 100%; border: 0; outline: 0; resize: none; background: transparent; font-size: 16px; padding: 2px 4px; }
+.searchbox-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+.filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chip-group { display: flex; gap: 4px; background: var(--panel); padding: 3px; border-radius: 999px; }
+.chip { border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
+.chip.on { background: var(--accent); color: #fff; }
+.select { border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
+.send {
+  width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--accent); color: #fff; display: grid; place-items: center;
+}
+.send:hover { background: var(--accent-strong); }
+.send:disabled { opacity: .45; cursor: default; }
+
+.suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px; }
+.suggestions button {
+  border: 1px solid var(--border); background: transparent; border-radius: 999px;
+  padding: 7px 14px; font-size: 13.5px; cursor: pointer; color: var(--muted);
+}
+.suggestions button:hover { color: var(--text); border-color: var(--accent); }
+
+/* Thread */
+.thread { width: 100%; max-width: 760px; padding: 36px 0 140px; }
+.turn { padding-bottom: 32px; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+.turn:last-child { border-bottom: 0; }
+.question { font-size: clamp(22px, 3vw, 28px); font-weight: 600; margin: 0 0 8px; line-height: 1.3; letter-spacing: -.01em; }
+.tags { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.tags span { font-size: 12px; background: var(--accent-soft); color: var(--accent-strong); padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+.section-title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px; margin: 18px 0 10px; }
+
+.sources { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.source {
+  background: var(--panel); border-radius: 10px; padding: 9px 11px; text-decoration: none; color: var(--text);
+  display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-height: 76px;
+  border: 1px solid transparent; transition: border-color .15s;
+}
+.source:hover { border-color: var(--accent); }
+.source .t { font-size: 12.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.source .d { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); overflow: hidden; white-space: nowrap; }
+.source .d img { width: 14px; height: 14px; border-radius: 3px; }
+.source .n { margin-left: auto; font-weight: 600; }
+.source.more { align-items: flex-start; cursor: pointer; border: 0; font: inherit; text-align: left; }
+.source.skeleton { animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+.sources.empty { display: block; color: var(--muted); font-size: 13.5px; }
+
+.status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+.status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1s infinite; }
+.status[hidden] { display: none; }
+.queries { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.queries span { font-size: 12.5px; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; }
+.queries span::before { content: "🔍 "; }
+
+.answer { font-size: 15.5px; }
+.answer h3 { font-size: 17px; margin: 22px 0 6px; }
+.answer h4 { font-size: 15.5px; margin: 16px 0 4px; }
+.answer p { margin: 8px 0; }
+.answer ul, .answer ol { padding-left: 22px; margin: 6px 0; }
+.answer li { margin: 3px 0; }
+.answer a { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+.answer code { background: var(--panel); padding: 1px 5px; border-radius: 4px; font-size: 13.5px; }
+.answer table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; display: block; overflow-x: auto; }
+.answer th, .answer td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+.cite {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
+  font-size: 11px; font-weight: 600; border-radius: 9px; background: var(--panel); color: var(--muted) !important;
+  text-decoration: none !important; vertical-align: 2px; margin-left: 2px;
+}
+.cite:hover { background: var(--accent); color: #fff !important; }
+.notice { margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: 14px; background: #fff4e5; color: #8a5300; }
+.notice.err { background: #fde8e8; color: #9b1c1c; }
+@media (prefers-color-scheme: dark) {
+  .notice { background: #3a2c14; color: #f5c77a; }
+  .notice.err { background: #3b1a1a; color: #f3a5a5; }
+}
+
+.related { list-style: none; margin: 0; padding: 0; }
+.related li { border-top: 1px solid var(--border); }
+.related button {
+  width: 100%; text-align: left; background: none; border: 0; padding: 11px 2px; cursor: pointer;
+  display: flex; justify-content: space-between; gap: 12px; font-size: 15px;
+}
+.related button:hover { color: var(--accent-strong); }
+.related button::after { content: "+"; color: var(--accent); font-size: 18px; line-height: 1; }
+
+.followup {
+  position: fixed; bottom: 20px; left: calc(240px + (100vw - 240px) / 2); transform: translateX(-50%);
+  width: min(720px, calc(100vw - 240px - 32px));
+  display: flex; gap: 8px; align-items: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 6px 6px 20px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.08);
+}
+.followup:focus-within { border-color: var(--accent); }
+.followup input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 15px; min-width: 0; }
+[hidden] { display: none !important; }
+
+@media (max-width: 860px) {
+  body { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .history-label, .history { display: none; }
+  .new-btn { margin-left: auto; padding: 7px 12px; font-size: 13px; }
+  .sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .followup { left: 50%; width: calc(100vw - 32px); }
+}
+
+/* Tambahan khusus versi .html */
+.key-btn {
+  margin-top: auto; display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border); background: transparent; border-radius: 10px;
+  padding: 8px 10px; cursor: pointer; font-size: 13px; color: var(--muted); text-align: left;
+}
+.key-btn:hover { color: var(--text); border-color: var(--accent); }
+.key-btn .dot { width: 8px; height: 8px; border-radius: 50%; background: #e0a100; flex-shrink: 0; }
+.key-btn:has([data-ok="1"]) .dot { background: var(--accent); }
+.key-dialog {
+  border: 1px solid var(--border); border-radius: 16px; padding: 22px; width: min(460px, calc(100vw - 32px));
+  background: var(--card); color: var(--text); box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.key-dialog::backdrop { background: rgba(0,0,0,.45); }
+.key-dialog h3 { margin: 0 0 8px; font-size: 18px; }
+.key-dialog p { margin: 0 0 14px; font-size: 14px; color: var(--muted); }
+.key-dialog a { color: var(--accent-strong); }
+.key-dialog input {
+  width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  background: var(--panel); outline: 0;
+}
+.key-dialog input:focus { border-color: var(--accent); }
+.key-actions { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+.key-actions span { flex: 1; }
+.key-actions button { border-radius: 999px; padding: 8px 16px; cursor: pointer; font-weight: 500; font-size: 14px; }
+.key-actions .ghost { border: 1px solid var(--border); background: transparent; }
+.key-actions .primary { border: 0; background: var(--accent); color: #fff; }
+@media (max-width: 860px) { .key-btn { margin-top: 0; margin-left: 8px; padding: 7px 10px; } .key-btn #keyState { display: none; } .new-btn { margin-left: auto; } }
+
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Beranda">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 7 4 13l12 6 10-5v7h2v-8z" fill="#fff"/><path d="M9 17v5c0 2 3.5 3.5 7 3.5s7-1.5 7-3.5v-5l-7 3.5z" fill="#fff"/></svg>
+      <span>Cari Beasiswa</span>
+    </a>
+    <button class="new-btn" id="newBtn" type="button">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Pencarian baru
+    </button>
+    <div class="history-label">Riwayat</div>
+    <ul class="history" id="history"></ul>
+    <button class="key-btn" id="keyBtn" type="button"><span class="dot"></span><span id="keyState">API key</span></button>
+  </aside>
+
+  <main class="main">
+    <!-- Beranda -->
+    <section class="home" id="home">
+      <h1>Cari beasiswa apa hari ini?</h1>
+      <form class="searchbox" id="homeForm">
+        <textarea id="homeInput" rows="2" placeholder="Contoh: beasiswa S2 full funding ke Eropa yang buka bulan ini" aria-label="Pertanyaan"></textarea>
+        <div class="searchbox-bar">
+          <div class="filters" role="group" aria-label="Filter">
+            <div class="chip-group" data-filter="levels">
+              <button type="button" class="chip" data-value="S1">S1</button>
+              <button type="button" class="chip" data-value="S2">S2</button>
+              <button type="button" class="chip" data-value="S3">S3</button>
+            </div>
+            <select id="region" class="select" aria-label="Lokasi studi">
+              <option value="semua">Semua lokasi</option>
+              <option value="dalam">Dalam negeri</option>
+              <option value="luar">Luar negeri</option>
+            </select>
+          </div>
+          <button class="send" type="submit" aria-label="Cari">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </form>
+      <div class="suggestions" id="suggestions"></div>
+    </section>
+
+    <!-- Hasil -->
+    <section class="thread" id="thread" hidden></section>
+
+    <form class="followup" id="followForm" hidden>
+      <input id="followInput" type="text" placeholder="Tanya lanjutan…" aria-label="Pertanyaan lanjutan" autocomplete="off">
+      <button class="send" type="submit" aria-label="Kirim">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+  </main>
+
+  <dialog class="key-dialog" id="keyDialog">
+  <form method="dialog">
+    <h3>API key Anthropic</h3>
+    <p>Versi .html ini memanggil Claude langsung dari browser kamu. Masukkan API key dari
+      <a href="https://platform.claude.com" target="_blank" rel="noopener noreferrer">platform.claude.com</a>.
+      Key hanya disimpan di browser ini, tidak dikirim ke mana pun selain ke API Anthropic.</p>
+    <input id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    <div class="key-actions">
+      <button id="keyDemo" class="ghost" type="button">Coba mode demo</button>
+      <span></span>
+      <button id="keyCancel" class="ghost" type="button">Batal</button>
+      <button id="keySave" class="primary" type="submit">Simpan</button>
+    </div>
+  </form>
+</dialog>
+
+  <template id="turnTpl">
+    <article class="turn">
+      <h2 class="question"></h2>
+      <div class="tags"></div>
+      <div class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Sumber</div>
+      <div class="sources"><div class="source skeleton"></div><div class="source skeleton"></div><div class="source skeleton"></div></div>
+      <div class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z" fill="currentColor"/></svg>Jawaban</div>
+      <div class="status"><span class="dot"></span><span class="status-text">Memulai pencarian…</span></div>
+      <div class="queries"></div>
+      <div class="answer"></div>
+      <div class="related-wrap" hidden>
+        <div class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Pertanyaan terkait</div>
+        <ul class="related"></ul>
+      </div>
+    </article>
+  </template>
+
+  <script>
+// Cari Beasiswa — frontend
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const home = $("#home"), thread = $("#thread"), followForm = $("#followForm");
+  const homeForm = $("#homeForm"), homeInput = $("#homeInput"), followInput = $("#followInput");
+  const regionSel = $("#region"), historyEl = $("#history");
+
+  const SUGGESTIONS = [
+    "Beasiswa S1 dalam negeri yang buka sekarang",
+    "LPDP 2027: jadwal dan syarat terbaru",
+    "Beasiswa S2 full funding ke Jepang",
+    "Beasiswa S3 riset AI di Eropa",
+    "Beasiswa S2 tanpa IELTS",
+    "Chevening vs Australia Awards",
+  ];
+
+  // ---- State ---------------------------------------------------------------
+  let sessions = load();            // [{id, turns:[{query, levels, region, answer, sources}]}]
+  let current = null;               // session aktif
+  let busy = false;
+  let ctl = null;
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem("cb_sessions") || "[]"); } catch { return []; }
+  }
+  function save() {
+    try { localStorage.setItem("cb_sessions", JSON.stringify(sessions.slice(0, 30))); } catch {}
+  }
+
+  // ---- Filters -------------------------------------------------------------
+  document.querySelectorAll(".chip").forEach((c) =>
+    c.addEventListener("click", () => c.classList.toggle("on")));
+  const getLevels = () => [...document.querySelectorAll(".chip.on")].map((c) => c.dataset.value);
+
+  // ---- Suggestions ---------------------------------------------------------
+  const sugEl = $("#suggestions");
+  SUGGESTIONS.forEach((s) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = s;
+    b.onclick = () => { homeInput.value = s; homeForm.requestSubmit(); };
+    sugEl.append(b);
+  });
+
+  homeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); homeForm.requestSubmit(); }
+  });
+  homeForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = homeInput.value.trim();
+    if (!q || busy) return;
+    current = { id: Date.now(), turns: [] };
+    sessions.unshift(current);
+    showThread();
+    thread.innerHTML = "";
+    ask(q, getLevels(), regionSel.value);
+  });
+  followForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = followInput.value.trim();
+    if (!q || busy) return;
+    followInput.value = "";
+    const last = current.turns.at(-1) || {};
+    ask(q, last.levels || [], last.region || "semua");
+  });
+  $("#newBtn").onclick = goHome;
+
+  function goHome() {
+    ctl?.abort();
+    current = null;
+    home.hidden = false; thread.hidden = true; followForm.hidden = true;
+    homeInput.value = ""; homeInput.focus();
+    renderHistory();
+  }
+  function showThread() {
+    home.hidden = true; thread.hidden = false; followForm.hidden = false;
+  }
+
+  // ---- History sidebar -----------------------------------------------------
+  function renderHistory() {
+    historyEl.innerHTML = "";
+    sessions.filter((s) => s.turns.length).forEach((s) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.textContent = s.turns[0].query;
+      b.title = s.turns[0].query;
+      if (s === current) b.classList.add("active");
+      b.onclick = () => openSession(s);
+      li.append(b); historyEl.append(li);
+    });
+  }
+  function openSession(s) {
+    if (busy) ctl?.abort();
+    current = s;
+    showThread();
+    thread.innerHTML = "";
+    s.turns.forEach((t) => {
+      const el = makeTurn(t);
+      renderSources(el, t.sources);
+      $(".status", el).hidden = true;
+      finishAnswer(el, t.answer, t.sources);
+    });
+    renderHistory();
+  }
+
+  // ---- Turn rendering ------------------------------------------------------
+  function makeTurn(t) {
+    const el = $("#turnTpl").content.firstElementChild.cloneNode(true);
+    $(".question", el).textContent = t.query;
+    const tags = $(".tags", el);
+    const labels = [...(t.levels || [])];
+    if (t.region === "dalam") labels.push("Dalam negeri");
+    if (t.region === "luar") labels.push("Luar negeri");
+    labels.forEach((l) => { const s = document.createElement("span"); s.textContent = l; tags.append(s); });
+    thread.append(el);
+    return el;
+  }
+
+  function domainOf(url) { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; } }
+
+  function renderSources(el, sources) {
+    const box = $(".sources", el);
+    box.innerHTML = "";
+    box.classList.toggle("empty", !sources.length);
+    if (!sources.length) { box.textContent = "Belum ada sumber."; return; }
+    const MAX = 3;
+    const shown = sources.length > 4 ? sources.slice(0, MAX) : sources;
+    shown.forEach((s, i) => box.append(sourceCard(s, i + 1)));
+    if (sources.length > 4) {
+      const more = document.createElement("button");
+      more.type = "button"; more.className = "source more";
+      more.innerHTML = `<span class="t">+${sources.length - MAX} sumber lainnya</span><span class="d"></span>`;
+      const icons = $(".d", more);
+      sources.slice(MAX, MAX + 5).forEach((s) => icons.append(favicon(s.url)));
+      more.onclick = () => { box.innerHTML = ""; sources.forEach((s, i) => box.append(sourceCard(s, i + 1))); };
+      box.append(more);
+    }
+  }
+  function favicon(url) {
+    const img = document.createElement("img");
+    img.alt = ""; img.loading = "lazy";
+    img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domainOf(url))}&sz=32`;
+    img.onerror = () => img.remove();
+    return img;
+  }
+  function sourceCard(s, n) {
+    const a = document.createElement("a");
+    a.className = "source"; a.href = s.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.title = s.title || s.url;
+    const t = document.createElement("span"); t.className = "t"; t.textContent = s.title || s.url;
+    const d = document.createElement("span"); d.className = "d";
+    d.append(favicon(s.url), document.createTextNode(domainOf(s.url)));
+    const num = document.createElement("span"); num.className = "n"; num.textContent = n;
+    d.append(num);
+    a.append(t, d);
+    return a;
+  }
+
+  // ---- Search --------------------------------------------------------------
+  async function ask(query, levels, region) {
+    busy = true; setBusy(true);
+    const turn = { query, levels, region, answer: "", sources: [] };
+    const el = makeTurn(turn);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    const statusEl = $(".status", el), statusText = $(".status-text", el);
+    const queriesEl = $(".queries", el), answerEl = $(".answer", el);
+    const srcIndex = new Map();
+    let pendingCites = [];
+    let gotSources = false;
+
+    const addSource = (s) => {
+      if (srcIndex.has(s.url)) return srcIndex.get(s.url);
+      turn.sources.push({ url: s.url, title: s.title });
+      srcIndex.set(s.url, turn.sources.length);
+      return turn.sources.length;
+    };
+    let raf = 0;
+    const paint = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        answerEl.innerHTML = renderMarkdown(stripRelated(turn.answer), turn.sources);
+      });
+    };
+
+    const history = current.turns.map((t) => ({ query: t.query, answer: stripRelated(t.answer) }));
+    ctl = new AbortController();
+    const onEvent = (ev, data) => {
+      switch (ev) {
+        case "status": statusText.textContent = data.message; break;
+        case "query": {
+          const s = document.createElement("span"); s.textContent = data.query; queriesEl.append(s); break;
+        }
+        case "sources":
+          data.items.forEach(addSource);
+          gotSources = true;
+          renderSources(el, turn.sources);
+          break;
+        case "citation": {
+          const n = addSource(data);
+          if (!pendingCites.includes(n)) pendingCites.push(n);
+          break;
+        }
+        case "blockend":
+          if (pendingCites.length) {
+            // Sisipkan badge sebelum spasi/baris baru di akhir teks agar tetap menempel ke kalimatnya.
+            const marks = pendingCites.map((n) => `\u0001${n}\u0002`).join("");
+            const m = /\s*$/.exec(turn.answer);
+            turn.answer = turn.answer.slice(0, m.index) + marks + m[0];
+            pendingCites = [];
+            renderSources(el, turn.sources);
+            paint();
+          }
+          break;
+        case "text":
+          statusEl.hidden = true;
+          turn.answer += data.text;
+          paint();
+          break;
+        case "notice": addNotice(el, data.message, false); break;
+        case "error": addNotice(el, data.message, true); break;
+      }
+    };
+    try {
+      await (window.CB_TRANSPORT || serverTransport)({ query, levels, region, history }, onEvent, ctl.signal);
+    } catch (err) {
+      if (err.name !== "AbortError") addNotice(el, "Gagal: " + err.message, true);
+    } finally {
+      statusEl.hidden = true;
+      if (!gotSources && !turn.sources.length) renderSources(el, []);
+      finishAnswer(el, turn.answer, turn.sources);
+      if (turn.answer) { current.turns.push(turn); save(); renderHistory(); }
+      busy = false; setBusy(false);
+      followInput.focus();
+    }
+  }
+
+  // Transport default: server lokal (server.js) lewat Server-Sent Events.
+  async function serverTransport(payload, onEvent, signal) {
+    const res = await fetch("/api/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal,
+    });
+    if (!res.ok || !res.body) throw new Error(await res.text() || `HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf("\n\n")) !== -1) {
+        const frame = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        const ev = /^event: (.+)$/m.exec(frame)?.[1];
+        const dataLine = /^data: (.*)$/m.exec(frame)?.[1];
+        if (ev && dataLine != null) onEvent(ev, JSON.parse(dataLine));
+      }
+    }
+  }
+
+  function setBusy(b) {
+    document.querySelectorAll(".send").forEach((x) => (x.disabled = b));
+  }
+  function addNotice(el, msg, isErr) {
+    const n = document.createElement("div");
+    n.className = "notice" + (isErr ? " err" : "");
+    n.textContent = msg;
+    $(".answer", el).after(n);
+  }
+
+  function finishAnswer(el, answer, sources) {
+    $(".answer", el).innerHTML = renderMarkdown(stripRelated(answer), sources);
+    const rel = parseRelated(answer);
+    const wrap = $(".related-wrap", el), list = $(".related", el);
+    list.innerHTML = "";
+    rel.forEach((q) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = q;
+      b.onclick = () => {
+        if (busy) return;
+        const last = current.turns.at(-1) || {};
+        ask(q, last.levels || [], last.region || "semua");
+      };
+      li.append(b); list.append(li);
+    });
+    wrap.hidden = !rel.length;
+  }
+
+  // ---- Related questions ---------------------------------------------------
+  function stripRelated(text) {
+    const i = text.search(/(^|\n)\s*RELATED:/);
+    return i === -1 ? text : text.slice(0, i);
+  }
+  function parseRelated(text) {
+    const m = /(?:^|\n)\s*RELATED:\s*(.+)/.exec(text);
+    if (!m) return [];
+    return m[1].replace(/\u0001\d+\u0002/g, "").split("|").map((s) => s.trim()).filter(Boolean).slice(0, 4);
+  }
+
+  // ---- Mini markdown renderer ---------------------------------------------
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function safeUrl(u) {
+    return /^https?:\/\//i.test(u) ? u : "#";
+  }
+  function inline(s, sources) {
+    let h = esc(s);
+    h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
+    h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+      (_, t, u) => `<a href="${safeUrl(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`);
+    h = h.replace(/(^|[\s(])(https?:\/\/[^\s<)]+[^\s<).,;:])/g,
+      (_, p, u) => `${p}<a href="${safeUrl(u)}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+    h = h.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    h = h.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>");
+    h = h.replace(/\u0001(\d+)\u0002/g, (_, n) => {
+      const s = sources[n - 1];
+      if (!s) return "";
+      return `<a class="cite" href="${safeUrl(s.url)}" target="_blank" rel="noopener noreferrer" title="${esc(s.title || s.url)}">${n}</a>`;
+    });
+    return h;
+  }
+  function renderMarkdown(md, sources) {
+    const lines = md.replace(/\r/g, "").split("\n");
+    let html = "", list = null, para = [];
+    const flushPara = () => { if (para.length) { html += `<p>${inline(para.join(" "), sources)}</p>`; para = []; } };
+    const closeList = () => { if (list) { html += `</${list}>`; list = null; } };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      let m;
+      if (!line.trim()) { flushPara(); closeList(); continue; }
+      if ((m = /^(#{1,6})\s+(.*)$/.exec(line))) {
+        flushPara(); closeList();
+        const lvl = Math.min(Math.max(m[1].length, 3), 4);
+        html += `<h${lvl}>${inline(m[2], sources)}</h${lvl}>`;
+        continue;
+      }
+      if (/^\s*\|.*\|\s*$/.test(line) && /^\s*\|?[\s:-]+\|[\s|:-]*$/.test(lines[i + 1] || "")) {
+        flushPara(); closeList();
+        const cells = (l) => l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+        html += "<table><thead><tr>" + cells(line).map((c) => `<th>${inline(c, sources)}</th>`).join("") + "</tr></thead><tbody>";
+        i += 2;
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
+          html += "<tr>" + cells(lines[i]).map((c) => `<td>${inline(c, sources)}</td>`).join("") + "</tr>";
+          i++;
+        }
+        i--;
+        html += "</tbody></table>";
+        continue;
+      }
+      if ((m = /^\s*[-*•]\s+(.*)$/.exec(line)) || (m = /^\s*\d+[.)]\s+(.*)$/.exec(line))) {
+        flushPara();
+        const type = /^\s*\d/.test(line) ? "ol" : "ul";
+        if (list !== type) { closeList(); html += `<${type}>`; list = type; }
+        html += `<li>${inline(m[1], sources)}</li>`;
+        continue;
+      }
+      if (/^---+$/.test(line.trim())) { flushPara(); closeList(); continue; }
+      closeList();
+      para.push(line.trim());
+    }
+    flushPara(); closeList();
+    return html;
+  }
+
+  renderHistory();
+  homeInput.focus();
+})();
+
+</script>
+  <script type="module">
+// Logika pencarian yang dipakai bersama oleh server.js (Node) dan
+// cari-beasiswa.html (langsung di browser). Tidak bergantung pada Node.
+//
+// runSearch() memanggil Claude dengan web search dan mengirim event ke
+// `send(event, data)`: status, query, sources, citation, text, blockend,
+// notice, error, done.
+
+const MODEL = "claude-opus-5-5";
+const FALLBACK_BETA = "server-side-fallback-2026-07-01";
+
+const SYSTEM_PROMPT = `Kamu adalah "Cari Beasiswa", mesin pencari info beasiswa untuk pelajar Indonesia, jenjang S1, S2, dan S3 (dalam dan luar negeri).
+
+Cara kerja:
+- SELALU gunakan web search untuk mencari info terbaru. Utamakan sumber resmi (situs penyedia beasiswa, kampus, kedutaan, LPDP, Kemdikbud, dsb). Jangan mengandalkan ingatan untuk deadline atau syarat.
+- Fokus pada beasiswa yang pendaftarannya masih buka atau akan buka (berdasarkan tanggal hari ini yang diberikan). Kalau periode sudah lewat, sebutkan periode berikutnya yang diperkirakan dan beri tanda.
+- Jawab dalam Bahasa Indonesia yang santai tapi jelas.
+
+Format jawaban (Markdown):
+1. Satu paragraf ringkasan singkat di awal.
+2. Untuk tiap beasiswa, pakai heading "### Nama Beasiswa" lalu bullet:
+   - **Jenjang:** S1 / S2 / S3
+   - **Negara / kampus:**
+   - **Pendanaan:** (penuh/parsial, apa saja yang ditanggung)
+   - **Deadline:** (tanggal persis kalau ada; tulis "belum diumumkan" kalau tidak jelas)
+   - **Syarat utama:** (IPK, bahasa, usia, dsb, singkat)
+   - **Link resmi:** URL
+3. Tutup dengan bagian "### Tips" berisi 2-3 tips praktis.
+4. Di baris paling akhir, tulis persis satu baris dengan format:
+   RELATED: pertanyaan lanjutan 1 | pertanyaan lanjutan 2 | pertanyaan lanjutan 3
+   (tiga pertanyaan lanjutan yang relevan, singkat, dalam Bahasa Indonesia).
+
+Kalau info tidak ditemukan atau ragu, katakan terus terang. Jangan mengarang nama beasiswa, nominal, atau tanggal.`;
+
+function buildUserMessage({ query, levels, region, history }) {
+  const today = new Date().toLocaleDateString("id-ID", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+  const parts = [`Tanggal hari ini: ${today}.`];
+  if (levels?.length) parts.push(`Filter jenjang: ${levels.join(", ")}.`);
+  if (region && region !== "semua") {
+    parts.push(`Filter lokasi studi: ${region === "dalam" ? "dalam negeri (Indonesia)" : "luar negeri"}.`);
+  }
+  if (history?.length) {
+    // Konteks percakapan sebelumnya dikirim sebagai teks biasa (bukan
+    // riwayat pesan), supaya tiap pencarian berdiri sendiri.
+    const ctx = history.slice(-3).map((h, i) =>
+      `Pertanyaan ${i + 1}: ${h.query}\nRingkasan jawaban: ${String(h.answer).slice(0, 1500)}`
+    ).join("\n\n");
+    parts.push(`Konteks pencarian sebelumnya:\n${ctx}`);
+  }
+  parts.push(`Pertanyaan: ${query}`);
+  return parts.join("\n\n");
+}
+
+// `Anthropic` = kelas SDK (untuk instanceof), `client` = instance-nya.
+async function runSearch({ client, Anthropic, input, send, signal }) {
+  const messages = [{ role: "user", content: buildUserMessage(input) }];
+  let useFallbacks = true;
+  try {
+    // Web search bisa membuat giliran "pause_turn"; lanjutkan sampai selesai.
+    for (let round = 0; round < 5; round++) {
+      const params = {
+        model: MODEL,
+        max_tokens: 16000,
+        system: SYSTEM_PROMPT,
+        thinking: { type: "adaptive" },
+        output_config: { effort: "medium" },
+        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 6 }],
+        messages,
+      };
+      if (useFallbacks) {
+        params.betas = [FALLBACK_BETA];
+        params.fallbacks = "default";
+      }
+
+      let stream;
+      try {
+        stream = client.beta.messages.stream(params, { signal });
+        await consumeStream(stream, send);
+      } catch (err) {
+        // Kalau akun belum mendukung server-side fallback, ulangi tanpa itu.
+        if (useFallbacks && err instanceof Anthropic.BadRequestError && /fallback/i.test(err.message)) {
+          useFallbacks = false;
+          round--;
+          continue;
+        }
+        throw err;
+      }
+
+      const msg = await stream.finalMessage();
+      if (msg.stop_reason === "pause_turn") {
+        messages.push({ role: "assistant", content: msg.content });
+        continue;
+      }
+      if (msg.stop_reason === "refusal") {
+        send("error", { message: "Permintaan ini tidak bisa diproses. Coba ubah pertanyaannya." });
+      } else if (msg.stop_reason === "max_tokens") {
+        send("notice", { message: "Jawaban terpotong karena terlalu panjang. Coba persempit pencarian." });
+      }
+      break;
+    }
+    send("done", {});
+  } catch (err) {
+    if (signal?.aborted) return;
+    send("error", { message: friendlyError(err, Anthropic) });
+  }
+}
+
+async function consumeStream(stream, send) {
+  const toolInputs = new Map(); // index -> partial JSON untuk query pencarian
+  const textBlocks = new Set();
+  for await (const event of stream) {
+    switch (event.type) {
+      case "content_block_start": {
+        const block = event.content_block;
+        if (block.type === "server_tool_use" && block.name === "web_search") {
+          toolInputs.set(event.index, "");
+          send("status", { message: "Mencari di web…" });
+        } else if (block.type === "web_search_tool_result") {
+          if (Array.isArray(block.content)) {
+            send("sources", {
+              items: block.content
+                .filter((r) => r.type === "web_search_result")
+                .map((r) => ({ url: r.url, title: r.title, age: r.page_age || null })),
+            });
+          }
+        } else if (block.type === "text") {
+          textBlocks.add(event.index);
+          send("status", { message: "Menulis jawaban…" });
+        }
+        break;
+      }
+      case "content_block_delta": {
+        const d = event.delta;
+        if (d.type === "text_delta") send("text", { text: d.text });
+        else if (d.type === "citations_delta" && d.citation?.type === "web_search_result_location") {
+          send("citation", { url: d.citation.url, title: d.citation.title });
+        } else if (d.type === "input_json_delta" && toolInputs.has(event.index)) {
+          toolInputs.set(event.index, toolInputs.get(event.index) + d.partial_json);
+        }
+        break;
+      }
+      case "content_block_stop": {
+        if (textBlocks.delete(event.index)) send("blockend", {});
+        if (toolInputs.has(event.index)) {
+          try {
+            const { query } = JSON.parse(toolInputs.get(event.index) || "{}");
+            if (query) send("query", { query });
+          } catch { /* input belum lengkap, abaikan */ }
+          toolInputs.delete(event.index);
+        }
+        break;
+      }
+    }
+  }
+}
+
+function friendlyError(err, Anthropic) {
+  if (err instanceof Anthropic.AuthenticationError) return "API key Anthropic tidak valid. Cek lagi key-nya.";
+  if (err instanceof Anthropic.RateLimitError) return "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.";
+  if (err instanceof Anthropic.APIConnectionError) return "Tidak bisa terhubung ke API. Cek koneksi internet.";
+  if (err instanceof Anthropic.APIError) return `Error dari API (${err.status}): ${err.message}`;
+  if (/authentication|api.?key/i.test(err?.message || "")) return "API key Anthropic belum diisi.";
+  return "Terjadi kesalahan: " + (err?.message || String(err));
+}
+
+// Mode demo: jawaban contoh tanpa memanggil API, untuk mencoba tampilan.
+async function demoSearch(send) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  send("status", { message: "Mencari di web…" });
+  await wait(400);
+  send("query", { query: "contoh pencarian beasiswa" });
+  send("sources", { items: [
+    { url: "https://example.com/beasiswa-a", title: "Contoh sumber A (mode demo)" },
+    { url: "https://example.org/beasiswa-b", title: "Contoh sumber B (mode demo)" },
+  ] });
+  await wait(400);
+  const chunks = [
+    "Ini **mode demo**: jawaban contoh, bukan data beasiswa sungguhan.\n\n",
+    "### Contoh Beasiswa\n- **Jenjang:** S2\n- **Deadline:** belum diumumkan\n",
+    "- **Link resmi:** https://example.com/beasiswa-a\n\n",
+    "RELATED: Contoh pertanyaan lanjutan 1 | Contoh pertanyaan lanjutan 2 | Contoh pertanyaan lanjutan 3",
+  ];
+  for (const [i, c] of chunks.entries()) {
+    if (i === 1) send("citation", { url: "https://example.com/beasiswa-a", title: "Contoh sumber A (mode demo)" });
+    send("text", { text: c });
+    if (i === 1) send("blockend", {});
+    await wait(250);
+  }
+  send("done", {});
+}
+
+// Bagian khusus versi .html: memanggil Claude API langsung dari browser
+// pakai API key milik pengguna (disimpan di localStorage browser ini saja).
+// File ini digabung ke cari-beasiswa.html oleh build-html.mjs, setelah isi
+// lib/search-core.js (runSearch, demoSearch sudah tersedia di scope).
+
+const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.4.0/+esm";
+const KEY_STORE = "cb_api_key";
+const DEMO_STORE = "cb_demo";
+
+const store = {
+  get: (k) => { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
+  set: (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} },
+};
+
+const dlg = document.getElementById("keyDialog");
+const keyInput = document.getElementById("keyInput");
+const keyBtn = document.getElementById("keyBtn");
+const keyState = document.getElementById("keyState");
+
+function refreshKeyState() {
+  const key = store.get(KEY_STORE), demo = store.get(DEMO_STORE) === "1";
+  keyState.textContent = key ? "API key tersimpan" : demo ? "Mode demo" : "Belum ada API key";
+  keyState.dataset.ok = key ? "1" : "";
+}
+function openKeyDialog() {
+  keyInput.value = store.get(KEY_STORE);
+  dlg.showModal();
+  keyInput.focus();
+}
+keyBtn.addEventListener("click", openKeyDialog);
+document.getElementById("keySave").addEventListener("click", (e) => {
+  e.preventDefault();
+  const v = keyInput.value.trim();
+  store.set(KEY_STORE, v);
+  if (v) store.set(DEMO_STORE, "");
+  client = null;
+  refreshKeyState();
+  dlg.close();
+});
+document.getElementById("keyDemo").addEventListener("click", (e) => {
+  e.preventDefault();
+  store.set(DEMO_STORE, "1");
+  store.set(KEY_STORE, "");
+  client = null;
+  refreshKeyState();
+  dlg.close();
+});
+document.getElementById("keyCancel").addEventListener("click", (e) => { e.preventDefault(); dlg.close(); });
+
+let AnthropicClass = null, client = null;
+async function getClient(key) {
+  if (!AnthropicClass) {
+    try {
+      AnthropicClass = (await import(SDK_URL)).default;
+    } catch {
+      throw new Error("Gagal memuat library Claude dari internet. Cek koneksi lalu coba lagi.");
+    }
+  }
+  if (!client) client = new AnthropicClass({ apiKey: key, dangerouslyAllowBrowser: true });
+  return client;
+}
+
+window.CB_TRANSPORT = async (input, send, signal) => {
+  if (store.get(DEMO_STORE) === "1") return demoSearch(send);
+  const key = store.get(KEY_STORE);
+  if (!key) {
+    openKeyDialog();
+    throw new Error("Isi API key Anthropic dulu (atau pilih mode demo), lalu cari lagi.");
+  }
+  const c = await getClient(key);
+  await runSearch({ client: c, Anthropic: AnthropicClass, input, send, signal });
+};
+
+refreshKeyState();
+if (!store.get(KEY_STORE) && store.get(DEMO_STORE) !== "1") openKeyDialog();
+
+</script>
+</body>
+</html>

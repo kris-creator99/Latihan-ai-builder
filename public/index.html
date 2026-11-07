@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cari Beasiswa</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2320b8a6'/><path d='M16 7 4 13l12 6 10-5v7h2v-8z' fill='white'/><path d='M9 17v5c0 2 3.5 3.5 7 3.5s7-1.5 7-3.5v-5l-7 3.5z' fill='white'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Beranda">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 7 4 13l12 6 10-5v7h2v-8z" fill="#fff"/><path d="M9 17v5c0 2 3.5 3.5 7 3.5s7-1.5 7-3.5v-5l-7 3.5z" fill="#fff"/></svg>
+      <span>Cari Beasiswa</span>
+    </a>
+    <button class="new-btn" id="newBtn" type="button">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Pencarian baru
+    </button>
+    <div class="history-label">Riwayat</div>
+    <ul class="history" id="history"></ul>
+  </aside>
+
+  <main class="main">
+    <!-- Beranda -->
+    <section class="home" id="home">
+      <h1>Cari beasiswa apa hari ini?</h1>
+      <form class="searchbox" id="homeForm">
+        <textarea id="homeInput" rows="2" placeholder="Contoh: beasiswa S2 full funding ke Eropa yang buka bulan ini" aria-label="Pertanyaan"></textarea>
+        <div class="searchbox-bar">
+          <div class="filters" role="group" aria-label="Filter">
+            <div class="chip-group" data-filter="levels">
+              <button type="button" class="chip" data-value="S1">S1</button>
+              <button type="button" class="chip" data-value="S2">S2</button>
+              <button type="button" class="chip" data-value="S3">S3</button>
+            </div>
+            <select id="region" class="select" aria-label="Lokasi studi">
+              <option value="semua">Semua lokasi</option>
+              <option value="dalam">Dalam negeri</option>
+              <option value="luar">Luar negeri</option>
+            </select>
+          </div>
+          <button class="send" type="submit" aria-label="Cari">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </form>
+      <div class="suggestions" id="suggestions"></div>
+    </section>
+
+    <!-- Hasil -->
+    <section class="thread" id="thread" hidden></section>
+
+    <form class="followup" id="followForm" hidden>
+      <input id="followInput" type="text" placeholder="Tanya lanjutan…" aria-label="Pertanyaan lanjutan" autocomplete="off">
+      <button class="send" type="submit" aria-label="Kirim">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+  </main>
+
+  <template id="turnTpl">
+    <article class="turn">
+      <h2 class="question"></h2>
+      <div class="tags"></div>
+      <div class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Sumber</div>
+      <div class="sources"><div class="source skeleton"></div><div class="source skeleton"></div><div class="source skeleton"></div></div>
+      <div class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3l2.5 5.5L20 11l-5.5 2.5L12 19l-2.5-5.5L4 11l5.5-2.5z" fill="currentColor"/></svg>Jawaban</div>
+      <div class="status"><span class="dot"></span><span class="status-text">Memulai pencarian…</span></div>
+      <div class="queries"></div>
+      <div class="answer"></div>
+      <div class="related-wrap" hidden>
+        <div class="section-title"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Pertanyaan terkait</div>
+        <ul class="related"></ul>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

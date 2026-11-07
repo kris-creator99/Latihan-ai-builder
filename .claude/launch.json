@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cari-beasiswa",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "server.js"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "cari-beasiswa-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "server.js"
+      ],
+      "env": {
+        "DEMO": "1",
+        "PORT": "3001"
+      },
+      "port": 3001
+    },
+    {
+      "name": "html-test",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "-e",
+        "require('http').createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});r.end(require('fs').readFileSync('cari-beasiswa.html'))}).listen(3002)"
+      ],
+      "port": 3002
+    }
+  ]
+}
