@@ -35,6 +35,7 @@ interface ChatApiResponse {
   interaction_id?: string | null;
   conversation_id?: string | null;
   references?: unknown[];
+  context_reset?: boolean;
   error?: string;
 }
 
@@ -60,6 +61,30 @@ const markdownComponents: Components = {
   ),
 };
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Fallback bila Clipboard API diblokir (izin ditolak / konteks tidak aman)
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.setAttribute("readonly", "");
+    el.style.position = "fixed";
+    el.style.opacity = "0";
+    document.body.appendChild(el);
+    el.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    document.body.removeChild(el);
+    return ok;
+  }
+}
+
 function createId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -70,9 +95,11 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentInteractionId, setCurrentInteractionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const chatSessionRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -108,8 +135,11 @@ export default function ChatPage() {
       if (!text || isLoading) return;
 
       setError(null);
+      setNotice(null);
       setInput("");
-      setMessages((prev) => [...prev, { id: createId(), role: "user", content: text }]);
+      const userMessageId = createId();
+      const session = chatSessionRef.current;
+      setMessages((prev) => [...prev, { id: userMessageId, role: "user", content: text }]);
       setIsLoading(true);
 
       try {
@@ -121,12 +151,18 @@ export default function ChatPage() {
 
         const data = (await res.json().catch(() => ({}))) as ChatApiResponse;
 
+        // User menekan "New Chat" saat menunggu: abaikan balasan dari sesi lama
+        if (session !== chatSessionRef.current) return;
+
         if (!res.ok) {
           throw new Error(data.error ?? `Permintaan gagal (${res.status}).`);
         }
 
         if (data.interaction_id) {
           setCurrentInteractionId(data.interaction_id);
+        }
+        if (data.context_reset) {
+          setNotice("Sesi sebelumnya sudah berakhir, jadi percakapan dimulai ulang dari pertanyaan ini.");
         }
 
         setMessages((prev) => [
@@ -138,14 +174,20 @@ export default function ChatPage() {
           },
         ]);
       } catch (err: unknown) {
+        if (session !== chatSessionRef.current) return;
         const msg =
-          err instanceof Error
-            ? err.message
-            : "Koneksi ke ACL Agent terputus. Coba lagi sebentar lagi.";
+          err instanceof TypeError || !(err instanceof Error)
+            ? "Tidak dapat terhubung ke server. Periksa koneksi internetmu lalu coba lagi."
+            : err.message;
         setError(msg);
+        // Kembalikan pesan ke input agar user cukup tekan Enter untuk mencoba lagi
+        setMessages((prev) => prev.filter((m) => m.id !== userMessageId));
+        setInput((current) => current || text);
       } finally {
-        setIsLoading(false);
-        textareaRef.current?.focus();
+        if (session === chatSessionRef.current) {
+          setIsLoading(false);
+          textareaRef.current?.focus();
+        }
       }
     },
     [currentInteractionId, isLoading]
@@ -164,20 +206,23 @@ export default function ChatPage() {
   };
 
   const handleNewChat = () => {
+    chatSessionRef.current += 1;
+    setIsLoading(false);
     setMessages([]);
     setInput("");
     setError(null);
+    setNotice(null);
     setCurrentInteractionId(null);
     textareaRef.current?.focus();
   };
 
   const handleCopy = async (msg: ChatMessage) => {
-    try {
-      await navigator.clipboard.writeText(msg.content);
+    const ok = await copyToClipboard(msg.content);
+    if (ok) {
       setCopiedId(msg.id);
       window.setTimeout(() => setCopiedId((id) => (id === msg.id ? null : id)), 1800);
-    } catch (err: unknown) {
-      console.error("Gagal menyalin:", err);
+    } else {
+      setError("Gagal menyalin jawaban. Coba blok teksnya lalu salin manual (Ctrl+C).");
     }
   };
 
@@ -324,6 +369,13 @@ export default function ChatPage() {
             </ul>
           )}
 
+          {notice && (
+            <div className="mt-6 flex items-start gap-2 rounded-xl border border-indigo-500/25 bg-indigo-500/10 px-4 py-2.5 text-xs text-indigo-200">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-300" />
+              <span>{notice}</span>
+            </div>
+          )}
+
           {error && (
             <div
               role="alert"
@@ -331,7 +383,7 @@ export default function ChatPage() {
             >
               <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
               <div className="flex-1">
-                <p className="font-medium">Ups, ada kendala koneksi.</p>
+                <p className="font-medium">Ups, ada kendala.</p>
                 <p className="mt-0.5 text-rose-300/80">{error}</p>
               </div>
               <button

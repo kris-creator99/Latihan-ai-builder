@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const LUMA_ENDPOINT = "https://luma-api-dev.aicreatorlabs.id/v1/chat/completions";
+const LUMA_TIMEOUT_MS = 90_000;
 
 interface ChatRequestBody {
   message?: unknown;
@@ -14,9 +15,34 @@ interface LumaResponse {
   references?: unknown[];
 }
 
+function callLuma(apiKey: string, query: string, interactionId: string | null) {
+  return fetch(LUMA_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": apiKey,
+    },
+    body: JSON.stringify({
+      agent_nickname: "acl.agent",
+      query,
+      interaction_id: interactionId,
+    }),
+    signal: AbortSignal.timeout(LUMA_TIMEOUT_MS),
+  });
+}
+
 export async function POST(req: NextRequest) {
+  let body: ChatRequestBody;
   try {
-    const body = (await req.json()) as ChatRequestBody;
+    body = (await req.json()) as ChatRequestBody;
+  } catch {
+    return NextResponse.json(
+      { error: "Format permintaan tidak valid." },
+      { status: 400 }
+    );
+  }
+
+  try {
     const message = body.message;
     const lastInteractionId =
       typeof body.lastInteractionId === "string" ? body.lastInteractionId : null;
@@ -37,25 +63,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Panggil endpoint resmi Lumagen API v1
-    const response = await fetch(LUMA_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-KEY": apiKey,
-      },
-      body: JSON.stringify({
-        agent_nickname: "acl.agent",
-        query: message,
-        interaction_id: lastInteractionId,
-      }),
-    });
+    let response = await callLuma(apiKey, message, lastInteractionId);
+    let contextReset = false;
+
+    // interaction_id kedaluwarsa/tidak dikenal → mulai percakapan baru agar user tidak terjebak
+    if (response.status === 404 && lastInteractionId) {
+      console.warn("Lumagen: interaction_id tidak ditemukan, memulai percakapan baru.");
+      response = await callLuma(apiKey, message, null);
+      contextReset = true;
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Lumagen API Error:", response.status, errorText);
       return NextResponse.json(
         { error: `Gagal berkomunikasi dengan ACL Agent (${response.status})` },
-        { status: response.status }
+        { status: response.status >= 500 ? 502 : response.status }
       );
     }
 
@@ -69,8 +92,15 @@ export async function POST(req: NextRequest) {
       interaction_id: data.interaction_id ?? null,
       conversation_id: data.conversation_id ?? null,
       references: data.references ?? [],
+      context_reset: contextReset,
     });
   } catch (error: unknown) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return NextResponse.json(
+        { error: "ACL Agent terlalu lama merespons. Coba kirim ulang pertanyaanmu." },
+        { status: 504 }
+      );
+    }
     console.error("Internal Server Error:", error);
     const message =
       error instanceof Error ? error.message : "Terjadi kesalahan server internal.";
