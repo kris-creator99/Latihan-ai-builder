@@ -29,6 +29,12 @@
         "require('http').createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});r.end(require('fs').readFileSync('cari-beasiswa.html'))}).listen(3002)"
       ],
       "port": 3002
+    },
+    {
+      "name": "acl-agent",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "acl-agent", "run", "dev", "--", "--port", "3010"],
+      "port": 3010
     }
   ]
 }
